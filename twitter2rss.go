@@ -44,6 +44,7 @@ func main() {
       Title:       "Twitter Home Timeline",
       Description: "Twitter Home Timeline RSS Feed",
       Author:      &feeds.Author{"My name", "my@email"},
+      Link:        &feeds.Link{Href: "http://notyetdefined/"},
       Created:     now,
     }
     feed.Items = []*feeds.Item{}
@@ -57,20 +58,21 @@ func main() {
           spew.Dump(tweet)
         }
 
+        const longForm = "Mon Jan 11 02:58:57 +0000 2016"
+        t, _ := time.Parse(longForm, tweet.CreatedAt)
+        fmt.Println(tweet.CreatedAt)
+        fmt.Println(t)
+
+
         item := &feeds.Item{
-          Title:       "Twitter content 1",
+          Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:10] ),
           Link:        &feeds.Link{Href: "http://tobedefined"},
           Description: tweet.Text,
           Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
-          Created:     now, //tweet.CreatedAt,
+          Created:     t,
+          Id:          tweet.IDStr,
         }
-        feed.Items = append(feed.Items, item)
-
-    		fmt.Println(tweet.IDStr)
-    		fmt.Println(tweet.CreatedAt)
-    		fmt.Println(tweet.Text)
-        fmt.Printf("%v (%v)\n", tweet.User.Name, tweet.User.ScreenName)
-        fmt.Println()
+        feed.Add(item)
     }
 
     // Create feed
