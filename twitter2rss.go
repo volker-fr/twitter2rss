@@ -7,6 +7,7 @@ import (
     "os"
     "time"
     "net/http"
+    "sort"
 
     "github.com/coreos/pkg/flagutil"
     "github.com/dghubble/go-twitter/twitter"
@@ -15,8 +16,54 @@ import (
     "github.com/gorilla/feeds"
 )
 
+type replaceObject struct {
+    from int
+    to int
+    replacement string
+}
 
-func get_rss() string {
+type ReplacementList []replaceObject
+
+func (dl ReplacementList) Len() int {
+   return len(dl)
+}
+
+func (dl ReplacementList) Swap(i, j int) {
+    dl[i], dl[j] = dl[j], dl[i]
+}
+
+func (dl ReplacementList) Less(i, j int) bool {
+    return dl[i].from < dl[j].from
+}
+
+
+
+// Parse the text, identify twitter shortened URLs and replace them
+func parseTweetText(tweet twitter.Tweet) string {
+    text := tweet.Text
+    var replacements ReplacementList
+
+    // Go through each URL object and replace it with a link and correct text
+    for _, url := range tweet.Entities.Urls {
+        replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
+        from := url.Indices[0]
+        to := url.Indices[1]
+        replacements = append(replacements, replaceObject{ from, to, replacement })
+    }
+
+    sort.Sort(replacements)
+
+    // replacement is sorted, start from the end, since we change the length of the string
+    fmt.Println(text)
+    for i := len(replacements) - 1; i >= 0; i-- {
+      text = text[:replacements[i].from] + replacements[i].replacement + text[replacements[i].to:]
+      fmt.Println(text)
+    }
+    fmt.Println("---\n")
+    return text
+}
+
+func getRss() string {
     flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
     consumerKey := flags.String("consumer-key", "", "Twitter Consumer Key")
     consumerSecret := flags.String("consumer-secret", "", "Twitter Consumer Secret")
@@ -65,7 +112,7 @@ func get_rss() string {
         item := &feeds.Item{
           Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:10] ),
           Link:        &feeds.Link{Href: url},
-          Description: tweet.Text,
+          Description: parseTweetText(tweet),
           Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
           Created:     t,
           Id:          tweet.IDStr,
@@ -85,10 +132,10 @@ func get_rss() string {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "%s", get_rss())
+    fmt.Fprintf(w, "%s", getRss())
 }
 
 func main() {
     http.HandleFunc("/", handler)
-    http.ListenAndServe(":8080", nil)
+    http.ListenAndServe("127.0.0.1:8080", nil)
 }
