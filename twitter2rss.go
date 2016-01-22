@@ -51,6 +51,27 @@ func parseTweetText(tweet twitter.Tweet) string {
         replacements = append(replacements, replaceObject{ from, to, replacement })
     }
 
+    // Go through each Media object and replace it the link in the text with it
+    for _, media := range tweet.Entities.Media {
+        var mediaUrl, replacement string
+        if media.Type != "photo" {
+            fmt.Println("media.Type not photo")
+            spew.Dump(tweet)
+            replacement = "unsupported_mediatype"
+        } else if media.Type == "photo" {
+            // or maybe we should use media.URLEntity.ExpandedURL?
+            if len(media.MediaURLHttps) != 0 {
+               mediaUrl = media.MediaURLHttps
+            } else {
+               mediaUrl = media.MediaURL
+            }
+            replacement = "<br><img src='" + mediaUrl + "'><br>"
+        }
+        from := media.Indices[0]
+        to := media.Indices[1]
+        replacements = append(replacements, replaceObject{ from, to, replacement })
+    }
+
     sort.Sort(replacements)
 
     // replacement is sorted, start from the end, since we change the length of the string
@@ -60,6 +81,7 @@ func parseTweetText(tweet twitter.Tweet) string {
       fmt.Println(text)
     }
     fmt.Println("---\n")
+
     return text
 }
 
@@ -108,11 +130,12 @@ func getRss() string {
         t, _ := time.Parse(time.RubyDate, tweet.CreatedAt)
 
         url := "https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr
+        if *debug { fmt.Println(url) }
 
         item := &feeds.Item{
           Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:10] ),
           Link:        &feeds.Link{Href: url},
-          Description: parseTweetText(tweet),
+          Description: tweet.User.Name + ": " + parseTweetText(tweet),
           Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
           Created:     t,
           Id:          tweet.IDStr,
