@@ -75,12 +75,21 @@ func parseTweetText(tweet twitter.Tweet) string {
     sort.Sort(replacements)
 
     // replacement is sorted, start from the end, since we change the length of the string
-    fmt.Println(text)
+    //fmt.Println(text)
     for i := len(replacements) - 1; i >= 0; i-- {
       text = text[:replacements[i].from] + replacements[i].replacement + text[replacements[i].to:]
-      fmt.Println(text)
+      //fmt.Println(text)
     }
-    fmt.Println("---\n")
+    //fmt.Println("---\n")
+
+    // Does this tweet quote another tweet?
+    if tweet.QuotedStatus != nil {
+        quotedTweet := *tweet.QuotedStatus
+        url := "https://twitter.com/" + quotedTweet.User.ScreenName + "/status/" + quotedTweet.IDStr
+        header := "<a href=\"" + url + "\">" + quotedTweet.User.Name + "</a><br>\n"
+        quotedText := parseTweetText(quotedTweet)
+        text +=  "\n<blockquote>\n" + header + quotedText + "\n</blockquote>\n"
+    }
 
     return text
 }
@@ -124,6 +133,13 @@ func getRss() string {
     homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
     tweets, _, _ := client.Timelines.HomeTimeline(homeTimelineParams)
 
+    /* // debugging & testing
+    tweetId := 12345
+    tweet, _, _ := client.Statuses.Show(tweetId, twitter.StatusShowParams{})
+    fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
+    println(parseTweetText(*tweet))
+    return "" */
+
     for _,tweet := range tweets {
         if *debug { spew.Dump(tweet) }
 
@@ -159,6 +175,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    //_ = getRss()
+
     http.HandleFunc("/", handler)
     http.ListenAndServe("127.0.0.1:8080", nil)
 }
