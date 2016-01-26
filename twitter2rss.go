@@ -77,7 +77,8 @@ func parseTweetText(tweet twitter.Tweet) string {
     // replacement is sorted, start from the end, since we change the length of the string
     //fmt.Println(text)
     for i := len(replacements) - 1; i >= 0; i-- {
-      text = text[:replacements[i].from] + replacements[i].replacement + text[replacements[i].to:]
+      // cut text after character and not byte by converting the string to a rune and back to a string
+      text = string([]rune(text)[:replacements[i].from]) + replacements[i].replacement + string([]rune(text)[replacements[i].to:])
       //fmt.Println(text)
     }
     //fmt.Println("---\n")
@@ -134,8 +135,8 @@ func getRss() string {
     tweets, _, _ := client.Timelines.HomeTimeline(homeTimelineParams)
 
     /* // debugging & testing
-    tweetId := 12345
-    tweet, _, _ := client.Statuses.Show(tweetId, twitter.StatusShowParams{})
+    var tweetId int64 = 1234
+    tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
     fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
     println(parseTweetText(*tweet))
     return "" */
