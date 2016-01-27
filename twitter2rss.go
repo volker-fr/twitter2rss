@@ -43,6 +43,14 @@ func parseTweetText(tweet twitter.Tweet) string {
     text := tweet.Text
     var replacements ReplacementList
 
+    // Special case, if it's retweeted then the URL placement might not be correct
+    // and the tweet can also contain cut off text.
+    // The Twitter timeline also doesn't show the RT message but the retweeted Tweet.
+    if tweet.RetweetedStatus != nil {
+        text = "RT @" + tweet.RetweetedStatus.User.ScreenName + ":<br>\n" + parseTweetText(*tweet.RetweetedStatus)
+        return text
+    }
+
     // Go through each URL object and replace it with a link and correct text
     for _, url := range tweet.Entities.Urls {
         replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
@@ -152,7 +160,7 @@ func getRss() string {
         item := &feeds.Item{
           Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:10] ),
           Link:        &feeds.Link{Href: url},
-          Description: tweet.User.Name + ": " + parseTweetText(tweet),
+          Description: "<a href=\"" + url + "\">" + tweet.User.Name + "</a>:<br>\n" + parseTweetText(tweet),
           Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
           Created:     t,
           Id:          tweet.IDStr,
