@@ -40,10 +40,14 @@ func getTweetUrl(tweet twitter.Tweet) string {
 	return "https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr
 }
 
-func getTweetText(id int64, client *twitter.Client) string {
-	tweet, _, _ := client.Statuses.OEmbed(id, &twitter.StatusOEmbedParams{})
+func processAPIError(message string, error error) {
+	fmt.Printf(message)
+	spew.Dump(error)
+}
 
-	return tweet.HTML
+func convertTwitterTime(timestring string) time.Time {
+	t, _ := time.Parse(time.RubyDate, timestring)
+	return t
 }
 
 // Parse the text, identify twitter shortened URLs and replace them
@@ -68,24 +72,30 @@ func parseTweetText(tweet twitter.Tweet) string {
 	}
 
 	// Go through each Media object and replace it the link in the text with it
-	for _, media := range tweet.Entities.Media {
-		var mediaUrl, replacement string
-		if media.Type != "photo" {
-			fmt.Println("media.Type not photo")
-			spew.Dump(tweet)
-			replacement = "unsupported_mediatype"
-		} else if media.Type == "photo" {
-			// or maybe we should use media.URLEntity.ExpandedURL?
-			if len(media.MediaURLHttps) != 0 {
-				mediaUrl = media.MediaURLHttps
-			} else {
-				mediaUrl = media.MediaURL
+	if tweet.ExtendedEntities != nil && tweet.ExtendedEntities.Media != nil {
+		var mediaFrom, mediaTo int
+		// Media objects always have the same indices for replacement for multiple objects
+		// therefore we append the data to the existing string
+		var mediaReplacement string
+		for _, media := range tweet.ExtendedEntities.Media {
+			var mediaUrl string
+			if media.Type != "photo" {
+				fmt.Println("media.Type not photo")
+				spew.Dump(tweet)
+				mediaReplacement += "unsupported_mediatype"
+			} else if media.Type == "photo" {
+				// or maybe we should use media.URLEntity.ExpandedURL?
+				if len(media.MediaURLHttps) != 0 {
+					mediaUrl = media.MediaURLHttps
+				} else {
+					mediaUrl = media.MediaURL
+				}
+				mediaReplacement += "<br><img src='" + mediaUrl + "'><br>"
 			}
-			replacement = "<br><img src='" + mediaUrl + "'><br>"
+			mediaFrom = media.Indices[0]
+			mediaTo = media.Indices[1]
+			replacements = append(replacements, replaceObject{mediaFrom, mediaTo, mediaReplacement})
 		}
-		from := media.Indices[0]
-		to := media.Indices[1]
-		replacements = append(replacements, replaceObject{from, to, replacement})
 	}
 
 	sort.Sort(replacements)
@@ -107,7 +117,9 @@ func parseTweetText(tweet twitter.Tweet) string {
 		text += "\n<blockquote>\n" + header + quotedText + "\n</blockquote>\n"
 	}
 
-	return "<a href=\"" + getTweetUrl(tweet) + "\">" + tweet.User.Name + "</a>:<br>\n" + text
+	footer := "<p><a href=\"" + getTweetUrl(tweet) + "\">" + tweet.User.Name + "</a> @ " + convertTwitterTime(tweet.CreatedAt).Format(time.RFC1123) + "\n"
+
+	return text + footer
 }
 
 func getRss() string {
@@ -146,32 +158,32 @@ func getRss() string {
 	feed.Items = []*feeds.Item{}
 
 	// Get timeline
-	homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
-	tweets, _, _ := client.Timelines.HomeTimeline(homeTimelineParams)
+	homeTimelineParams := &twitter.HomeTimelineParams{Count: 5}
+	tweets, _, err := client.Timelines.HomeTimeline(homeTimelineParams)
+	if err != nil {
+		processAPIError("Couldn't load HomeTimeline: ", err)
+		return ""
+	}
 
 	/* // debugging & testing
-		var tweetId int64 = 1234
-		tweet, _, _ := client.Statuses.OEmbed(tweetId, &twitter.StatusOEmbedParams{})
-		spew.Dump(tweet)
-	    //tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
-		//fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
-	    //println(parseTweetText(*tweet))
-		return "" */
+	//var tweetId int64 = 1234
+	tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
+	fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
+	//println(parseTweetText(*tweet))
+	spew.Dump(tweet)
+	return ""*/
 
 	for _, tweet := range tweets {
 		if *debug {
 			spew.Dump(tweet)
 		}
 
-		t, _ := time.Parse(time.RubyDate, tweet.CreatedAt)
-
 		item := &feeds.Item{
-			Title: fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:10]),
-			Link:  &feeds.Link{Href: getTweetUrl(tweet)},
-			//Description: parseTweetText(tweet),
-			Description: getTweetText(tweet.ID, client),
+			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:40]),
+			Link:        &feeds.Link{Href: getTweetUrl(tweet)},
+			Description: parseTweetText(tweet),
 			Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
-			Created:     t,
+			Created:     convertTwitterTime(tweet.CreatedAt),
 			Id:          tweet.IDStr,
 		}
 		feed.Add(item)
