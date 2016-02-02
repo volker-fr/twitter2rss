@@ -218,6 +218,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//_ = getRss()
 
+	// TODO: add logging
+	// TODO: add error handling in case the port is already in use
 	http.HandleFunc("/", handler)
 	http.ListenAndServe("127.0.0.1:8080", nil)
 }
