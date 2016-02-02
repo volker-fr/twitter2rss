@@ -1,0 +1,7 @@
+ignoreSource = [
+    "untapped",
+    "foursquare"
+]
+
+ignoreText = [
+]

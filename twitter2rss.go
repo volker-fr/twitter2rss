@@ -9,6 +9,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/volker-fr/twitter2rss/config"
+
 	"github.com/coreos/pkg/flagutil"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
@@ -129,18 +131,19 @@ func getRss() string {
 	accessToken := flags.String("access-token", "", "Twitter Access Token")
 	accessSecret := flags.String("access-secret", "", "Twitter Access Secret")
 	debug := flags.Bool("debug", false, "Debug")
+	configFile := flags.String("config", "", "Configiguration file")
 
 	flags.Parse(os.Args[1:])
-	flagutil.SetFlagsFromEnv(flags, "TWITTER")
+	flagutil.SetFlagsFromEnv(flags, "TWITTER2RSS")
 
 	if *consumerKey == "" || *consumerSecret == "" || *accessToken == "" || *accessSecret == "" {
 		log.Fatal("Consumer key/secret and Access token/secret required")
 	}
 
-	config := oauth1.NewConfig(*consumerKey, *consumerSecret)
+	twitterConfig := oauth1.NewConfig(*consumerKey, *consumerSecret)
 	token := oauth1.NewToken(*accessToken, *accessSecret)
 	// OAuth1 http.Client will automatically authorize Requests
-	httpClient := config.Client(oauth1.NoContext, token)
+	httpClient := twitterConfig.Client(oauth1.NoContext, token)
 
 	// Twitter Client
 	client := twitter.NewClient(httpClient)
@@ -157,6 +160,20 @@ func getRss() string {
 	}
 	feed.Items = []*feeds.Item{}
 
+	/* // debugging & testing
+	//var tweetId int64 = 1234
+	tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
+	fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
+	//println(parseTweetText(*tweet))
+	spew.Dump(tweet)
+	return "" */
+
+	var conf config.Config
+	if len(*configFile) != 0 {
+		conf = config.GetConfig(*configFile)
+		spew.Dump(conf)
+	}
+
 	// Get timeline
 	homeTimelineParams := &twitter.HomeTimelineParams{Count: 5}
 	tweets, _, err := client.Timelines.HomeTimeline(homeTimelineParams)
@@ -164,14 +181,6 @@ func getRss() string {
 		processAPIError("Couldn't load HomeTimeline: ", err)
 		return ""
 	}
-
-	/* // debugging & testing
-	//var tweetId int64 = 1234
-	tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
-	fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
-	//println(parseTweetText(*tweet))
-	spew.Dump(tweet)
-	return ""*/
 
 	for _, tweet := range tweets {
 		if *debug {
