@@ -1,14 +1,14 @@
 package config
 
 import (
+	"io/ioutil"
 	"log"
-    "io/ioutil"
 
 	"github.com/hashicorp/hcl"
 )
 
 type Config struct {
-	IgnoreText []string
+	IgnoreText   []string
 	IgnoreSource []string
 }
 
@@ -20,7 +20,7 @@ func GetConfig(configFile string) Config {
 		log.Fatalf("Error: Couldn't read config file %s: %s", configFile, err)
 	}
 
-	err = hcl.Decode(&conf,string(configData))
+	err = hcl.Decode(&conf, string(configData))
 	if err != nil {
 		log.Fatalf("Error parsing config file %s: %s", configFile, err)
 	}

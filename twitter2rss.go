@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
@@ -124,6 +125,28 @@ func parseTweetText(tweet twitter.Tweet) string {
 	return text + footer
 }
 
+func isTweetFiltered(tweet twitter.Tweet, conf config.Config) bool {
+	if len(conf.IgnoreSource) > 0 {
+		for _, searchString := range conf.IgnoreSource {
+			if strings.Contains(tweet.Source, searchString) {
+				fmt.Println("Source filter matched for tweet %s: %s", tweet.IDStr, searchString)
+				return true
+			}
+		}
+	}
+
+	if len(conf.IgnoreText) > 0 {
+		for _, searchString := range conf.IgnoreText {
+			if strings.Contains(tweet.Text, searchString) {
+				fmt.Println("Text filter matched for tweet %s: %s", tweet.IDStr, searchString)
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func getRss() string {
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
 	consumerKey := flags.String("consumer-key", "", "Twitter Consumer Key")
@@ -161,21 +184,25 @@ func getRss() string {
 	feed.Items = []*feeds.Item{}
 
 	/* // debugging & testing
-	//var tweetId int64 = 1234
-	tweet, _, _ := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
-	fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
-	//println(parseTweetText(*tweet))
-	spew.Dump(tweet)
-	return "" */
+		//var tweetId int64 = 1234
+	    tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
+		if err != nil {
+			processAPIError("Couldn't load client.Statuses.Show: ", err)
+			return ""
+		}
+		fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
+		println(parseTweetText(*tweet))
+		spew.Dump(tweet)
+		return "" */
 
+	// load the config file
 	var conf config.Config
 	if len(*configFile) != 0 {
 		conf = config.GetConfig(*configFile)
-		spew.Dump(conf)
 	}
 
 	// Get timeline
-	homeTimelineParams := &twitter.HomeTimelineParams{Count: 5}
+	homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
 	tweets, _, err := client.Timelines.HomeTimeline(homeTimelineParams)
 	if err != nil {
 		processAPIError("Couldn't load HomeTimeline: ", err)
@@ -183,12 +210,18 @@ func getRss() string {
 	}
 
 	for _, tweet := range tweets {
-		if *debug {
-			spew.Dump(tweet)
+		if isTweetFiltered(tweet, conf) {
+			fmt.Println("Tweet is filtered...")
+			continue
 		}
 
+		titleLimit := 40
+		if len(tweet.Text) < 40 {
+			titleLimit = len(tweet.Text)
+		}
 		item := &feeds.Item{
-			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:40]),
+			// TODO: check if slicing a string with non ascii chars will fail/scramble the text
+			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:titleLimit]),
 			Link:        &feeds.Link{Href: getTweetUrl(tweet)},
 			Description: parseTweetText(tweet),
 			Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
