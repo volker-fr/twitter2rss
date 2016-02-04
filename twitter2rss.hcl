@@ -4,4 +4,5 @@ ignoreSource = [
 ]
 
 ignoreText = [
+    "I just backed.*kickstarter.com"
 ]

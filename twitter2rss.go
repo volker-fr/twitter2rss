@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
@@ -128,17 +128,22 @@ func parseTweetText(tweet twitter.Tweet) string {
 func isTweetFiltered(tweet twitter.Tweet, conf config.Config) bool {
 	if len(conf.IgnoreSource) > 0 {
 		for _, searchString := range conf.IgnoreSource {
-			if strings.Contains(tweet.Source, searchString) {
-				fmt.Println("Source filter matched for tweet %s: %s", tweet.IDStr, searchString)
+			re := regexp.MustCompile(searchString)
+			if re.MatchString(tweet.Source) {
+				fmt.Printf("Source filter regex matched for tweet %s: %s\n", tweet.IDStr, searchString)
 				return true
 			}
 		}
 	}
 
 	if len(conf.IgnoreText) > 0 {
+		// parse it so we can also filter the URLs in a tweet
+		// we still parse this tweet twice... once here, once at the feed creation :(
+		parsedTweetText := parseTweetText(tweet)
 		for _, searchString := range conf.IgnoreText {
-			if strings.Contains(tweet.Text, searchString) {
-				fmt.Println("Text filter matched for tweet %s: %s", tweet.IDStr, searchString)
+			re := regexp.MustCompile(searchString)
+			if re.MatchString(parsedTweetText) {
+				fmt.Printf("Text filter regex matched for tweet %s: %s\n", tweet.IDStr, searchString)
 				return true
 			}
 		}
@@ -191,8 +196,8 @@ func getRss() string {
 			return ""
 		}
 		fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
-		println(parseTweetText(*tweet))
 		spew.Dump(tweet)
+		println(parseTweetText(*tweet))
 		return "" */
 
 	// load the config file
@@ -211,7 +216,6 @@ func getRss() string {
 
 	for _, tweet := range tweets {
 		if isTweetFiltered(tweet, conf) {
-			fmt.Println("Tweet is filtered...")
 			continue
 		}
 
