@@ -1,23 +1,22 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"sort"
 	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
 
-	"github.com/coreos/pkg/flagutil"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/gorilla/feeds"
 )
+
+var conf config.Config = config.LoadConfig()
 
 type replaceObject struct {
 	from        int
@@ -104,13 +103,10 @@ func parseTweetText(tweet twitter.Tweet) string {
 	sort.Sort(replacements)
 
 	// replacement is sorted, start from the end, since we change the length of the string
-	//fmt.Println(text)
 	for i := len(replacements) - 1; i >= 0; i-- {
 		// cut text after character and not byte by converting the string to a rune and back to a string
 		text = string([]rune(text)[:replacements[i].from]) + replacements[i].replacement + string([]rune(text)[replacements[i].to:])
-		//fmt.Println(text)
 	}
-	//fmt.Println("---\n")
 
 	// Does this tweet quote another tweet?
 	if tweet.QuotedStatus != nil {
@@ -153,23 +149,8 @@ func isTweetFiltered(tweet twitter.Tweet, conf config.Config) bool {
 }
 
 func getRss() string {
-	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
-	consumerKey := flags.String("consumer-key", "", "Twitter Consumer Key")
-	consumerSecret := flags.String("consumer-secret", "", "Twitter Consumer Secret")
-	accessToken := flags.String("access-token", "", "Twitter Access Token")
-	accessSecret := flags.String("access-secret", "", "Twitter Access Secret")
-	debug := flags.Bool("debug", false, "Debug")
-	configFile := flags.String("config", "", "Configiguration file")
-
-	flags.Parse(os.Args[1:])
-	flagutil.SetFlagsFromEnv(flags, "TWITTER2RSS")
-
-	if *consumerKey == "" || *consumerSecret == "" || *accessToken == "" || *accessSecret == "" {
-		log.Fatal("Consumer key/secret and Access token/secret required")
-	}
-
-	twitterConfig := oauth1.NewConfig(*consumerKey, *consumerSecret)
-	token := oauth1.NewToken(*accessToken, *accessSecret)
+	twitterConfig := oauth1.NewConfig(conf.ConsumerKey, conf.ConsumerSecret)
+	token := oauth1.NewToken(conf.AccessToken, conf.AccessSecret)
 	// OAuth1 http.Client will automatically authorize Requests
 	httpClient := twitterConfig.Client(oauth1.NoContext, token)
 
@@ -199,12 +180,6 @@ func getRss() string {
 		spew.Dump(tweet)
 		println(parseTweetText(*tweet))
 		return "" */
-
-	// load the config file
-	var conf config.Config
-	if len(*configFile) != 0 {
-		conf = config.GetConfig(*configFile)
-	}
 
 	// Get timeline
 	homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
@@ -241,7 +216,7 @@ func getRss() string {
 		log.Fatal(err)
 	}
 
-	if *debug {
+	if conf.Debug {
 		fmt.Println(atom, "\n")
 	}
 
