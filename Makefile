@@ -13,3 +13,4 @@ linux: clean
 fmt:
 	go fmt *.go
 	go fmt config/*.go
+	go fmt filter/*.go

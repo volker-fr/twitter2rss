@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 	"sort"
 	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
+	"github.com/volker-fr/twitter2rss/filter"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
@@ -66,11 +66,13 @@ func parseTweetText(tweet twitter.Tweet) string {
 	}
 
 	// Go through each URL object and replace it with a link and correct text
+	urls := []string{}
 	for _, url := range tweet.Entities.Urls {
 		replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
 		from := url.Indices[0]
 		to := url.Indices[1]
 		replacements = append(replacements, replaceObject{from, to, replacement})
+		urls = append(urls, url.ExpandedURL)
 	}
 
 	// Go through each Media object and replace it the link in the text with it
@@ -110,42 +112,27 @@ func parseTweetText(tweet twitter.Tweet) string {
 
 	// Does this tweet quote another tweet?
 	if tweet.QuotedStatus != nil {
-		quotedTweet := *tweet.QuotedStatus
-		header := "<a href=\"" + getTweetUrl(quotedTweet) + "\">" + quotedTweet.User.Name + "</a><br>\n"
-		quotedText := parseTweetText(quotedTweet)
-		text += "\n<blockquote>\n" + header + quotedText + "\n</blockquote>\n"
+		text += "\n<blockquote>\n" + parseTweetText(*tweet.QuotedStatus) + "\n</blockquote>\n"
 	}
 
 	footer := "<p><a href=\"" + getTweetUrl(tweet) + "\">" + tweet.User.Name + "</a> @ " + convertTwitterTime(tweet.CreatedAt).Format(time.RFC1123) + "\n"
 
-	return text + footer
+	// process all urls we found so we can append it to the entry
+	var urlText string
+	if len(urls) > 0 {
+		urlText = processUrlTexts(urls)
+	}
+
+	return text + footer + urlText
 }
 
-func isTweetFiltered(tweet twitter.Tweet, conf config.Config) bool {
-	if len(conf.IgnoreSource) > 0 {
-		for _, searchString := range conf.IgnoreSource {
-			re := regexp.MustCompile(searchString)
-			if re.MatchString(tweet.Source) {
-				fmt.Printf("Source filter regex matched for tweet %s: %s\n", tweet.IDStr, searchString)
-				return true
-			}
-		}
+// returns a string with processed urls
+func processUrlTexts(urls []string) string {
+	urlText := "\n<p>"
+	for _, url := range urls {
+		urlText += "* <a href=\"" + url + "\">" + url + "</a>\n"
 	}
-
-	if len(conf.IgnoreText) > 0 {
-		// parse it so we can also filter the URLs in a tweet
-		// we still parse this tweet twice... once here, once at the feed creation :(
-		parsedTweetText := parseTweetText(tweet)
-		for _, searchString := range conf.IgnoreText {
-			re := regexp.MustCompile(searchString)
-			if re.MatchString(parsedTweetText) {
-				fmt.Printf("Text filter regex matched for tweet %s: %s\n", tweet.IDStr, searchString)
-				return true
-			}
-		}
-	}
-
-	return false
+	return urlText
 }
 
 func getRss() string {
@@ -190,7 +177,9 @@ func getRss() string {
 	}
 
 	for _, tweet := range tweets {
-		if isTweetFiltered(tweet, conf) {
+		parsedTweetText := parseTweetText(tweet)
+
+		if filter.IsTweetFiltered(tweet, conf, parsedTweetText) {
 			continue
 		}
 
@@ -202,7 +191,7 @@ func getRss() string {
 			// TODO: check if slicing a string with non ascii chars will fail/scramble the text
 			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:titleLimit]),
 			Link:        &feeds.Link{Href: getTweetUrl(tweet)},
-			Description: parseTweetText(tweet),
+			Description: parsedTweetText,
 			Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
 			Created:     convertTwitterTime(tweet.CreatedAt),
 			Id:          tweet.IDStr,
