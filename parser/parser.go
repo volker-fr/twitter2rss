@@ -29,7 +29,7 @@ func ParseTweetText(tweet twitter.Tweet) string {
 	// The Twitter timeline also doesn't show the RT message but the retweeted Tweet.
 	if tweet.RetweetedStatus != nil {
 		text = ParseTweetText(*tweet.RetweetedStatus)
-		return "<a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a>: RT @" + tweet.RetweetedStatus.User.ScreenName + ":<br>\n" + text
+		return text + "<br>\nvia RT from <a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a>"
 	}
 
 	// Go through each URL object and replace it with a link and correct text
