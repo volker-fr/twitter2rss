@@ -8,6 +8,9 @@ import (
 	"golang.org/x/net/html"
 )
 
+// TODO: there is also "<link itemprop=embedURL ..." but its much more
+//		 difficult to parse since the hight & width value can occure multiple
+//		 times if you look at the youtube html code
 type Content struct {
 	URL				   string
 	HTMLTitle          string
@@ -18,6 +21,12 @@ type Content struct {
 	OGDescription      string
 	LPDescription      string
 	TwitterDescription string
+	TwitterPlayer	string
+	TwitterPlayerWidth string
+	TwitterPlayerHeight string
+	OGVideoURL string
+	OGVideoWidth string
+	OGVideoHeight string
 }
 
 func getUrlContent(urls []string) string {
@@ -107,13 +116,38 @@ func getMetaInformation(content Content, keys map[string]string) Content {
 	if keys["name"] == "hdl" {
 		content.HDLTitle = keys["content"]
 	}
+	// TwitterPlayer: <meta name="twitter:player" content="...">
+	if keys["name"] == "twitter:player" {
+		content.TwitterPlayer = keys["content"]
+	}
+	// TwitterPlayerWidth: <meta name="twitter:player:width" content="...">
+	if keys["name"] == "twitter:player:width" {
+		content.TwitterPlayerWidth = keys["content"]
+	}
+	// TwitterPlayerHeight: <meta name="twitter:player:height" content="...">
+	if keys["name"] == "twitter:player:height" {
+		content.TwitterPlayerHeight = keys["content"]
+	}
+	// OGVideoURL: <meta property="og:video:url" content="...">
+	if keys["property"] == "og:video:url" {
+		content.OGVideoURL = keys["content"]
+	}
+	// OGVideoWidth: <meta property="og:video:width" content="...">
+	if keys["property"] == "og:video:width" {
+		content.OGVideoWidth = keys["content"]
+	}
+	// OGVideoHeight: <meta property="og:video:height" content="...">
+	if keys["property"] == "og:video:height" {
+		content.OGVideoHeight = keys["content"]
+	}
 
 	return content
 }
 
 
 func buildHTMLblock(content Content) string {
-	var title, description string
+	var title, description, mediaText string
+	var media, mediaWidth, mediaHeight string
 
 	// get the title
 	if len(content.TwitterTitle) > 0 {
@@ -137,8 +171,31 @@ func buildHTMLblock(content Content) string {
 		description = content.Description
 	}
 
+	// get the media/video
+	if len(content.TwitterPlayer) > 0 {
+		media = content.TwitterPlayer
+	} else if len(content.OGVideoURL) > 0 {
+		media = content.OGVideoURL
+	}
+	// get media width
+	if len(content.TwitterPlayerWidth) > 0 {
+		mediaWidth = content.TwitterPlayerWidth
+	} else if len(content.OGVideoWidth) > 0 {
+		mediaWidth = content.OGVideoWidth
+	}
+
+	// get media height
+	if len(content.TwitterPlayerHeight) > 0 {
+		mediaHeight = content.TwitterPlayerHeight
+	} else if len(content.OGVideoHeight) > 0 {
+		mediaHeight = content.OGVideoHeight
+	}
+
+	if len(media) > 0 && len(mediaWidth) >0 && len(mediaHeight) > 0 {
+		mediaText = "\n<iframe width=" + mediaWidth + " height=" + mediaHeight + " src=" + media + " frameborder=0 allowfullscreen></iframe>"
+	}
 	title = "<b>" + title + "</b><br>\n"
 	footer := "<p><a href=\"" + content.URL + "\">" + content.URL + "</a>\n"
 
-	return "<blockquote>\n" + title + description + footer + "</blockquote>\n"
+	return "<blockquote>\n" + title + description + footer + mediaText + "</blockquote>\n"
 }
