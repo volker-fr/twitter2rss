@@ -25,7 +25,6 @@ func getUrlContent(urls []string) string {
 	var returnText string
 
 	for _, url := range urls {
-		fmt.Println(url)
 		var content Content
 		content.URL = url
 
@@ -44,7 +43,7 @@ func getUrlContent(urls []string) string {
 			if tt == html.ErrorToken {
 				break
 			}
-			if tt == html.StartTagToken {
+			if tt == html.StartTagToken || tt == html.SelfClosingTagToken || tt == html.EndTagToken {
 				tagName, hasAttr := z.TagName()
 
 				// parse title tag
