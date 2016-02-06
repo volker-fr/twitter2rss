@@ -78,25 +78,16 @@ func ParseTweetText(tweet twitter.Tweet) string {
 
 	// Does this tweet quote another tweet?
 	if tweet.QuotedStatus != nil {
-		text += "\n<blockquote>\n" + ParseTweetText(*tweet.QuotedStatus) + "\n</blockquote>\n"
+		text += "\n<blockquote>\n" + ParseTweetText(*tweet.QuotedStatus) + "\n</blockquote>"
 	}
 
-	footer := "<p><a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a> @ " + ConvertTwitterTime(tweet.CreatedAt).Format(time.RFC1123) + "\n"
+	footer := "\n<p><a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a> @ " + ConvertTwitterTime(tweet.CreatedAt).Format(time.RFC1123) + "\n"
 
 	// process all urls we found so we can append it to the entry
 	var urlText string
 	if len(urls) > 0 {
-		urlText = processUrlTexts(urls)
+		urlText = "<hr>\n" + getUrlContent(urls) + "\n"
 	}
 
 	return text + footer + urlText
-}
-
-// returns a string with processed urls
-func processUrlTexts(urls []string) string {
-	urlText := "\n<p>"
-	for _, url := range urls {
-		urlText += "* <a href=\"" + url + "\">" + url + "</a>\n"
-	}
-	return urlText
 }

@@ -71,6 +71,10 @@ func getRss() string {
 			continue
 		}
 
+		if conf.Debug {
+			fmt.Printf("----\n%s\n", parsedTweetText)
+		}
+
 		titleLimit := 40
 		if len(tweet.Text) < 40 {
 			titleLimit = len(tweet.Text)
