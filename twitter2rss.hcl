@@ -1,5 +1,5 @@
 ignoreSource = [
-    "untapped",
+    "untappd",
     "foursquare"
 ]
 

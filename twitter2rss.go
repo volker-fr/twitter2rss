@@ -53,7 +53,7 @@ func getRss() string {
 		}
 		fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
 		spew.Dump(tweet)
-		println(parseTweetText(*tweet))
+		println(parser.ParseTweetText(*tweet))
 		return "" */
 
 	// Get timeline
