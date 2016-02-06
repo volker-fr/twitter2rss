@@ -10,6 +10,9 @@ clean:
 linux: clean
 	GOOS=linux GOARCH=amd64 go build
 
+freebsd: clean
+	GOOS=freebsd GOARCH=amd64 go build
+
 fmt:
 	go fmt *.go
 	go fmt config/*.go
