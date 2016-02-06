@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"time"
+	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
@@ -37,8 +38,18 @@ func ParseTweetText(tweet twitter.Tweet) string {
 		replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
 		from := url.Indices[0]
 		to := url.Indices[1]
+		// In case a tweet is shared with a comment there is a twitter URL in it
+		// which we don't want to have since we will get the shared tweet later
+		if tweet.QuotedStatus != nil {
+			if strings.EqualFold(url.ExpandedURL, GetTweetUrl(*tweet.QuotedStatus)) {
+				// replace with nothing
+				replacement = ""
+			}
+		}
 		replacements = append(replacements, replaceObject{from, to, replacement})
-		urls = append(urls, url.ExpandedURL)
+		if len(replacement) > 0 {
+			urls = append(urls, url.ExpandedURL)
+		}
 	}
 
 	// Go through each Media object and replace it the link in the text with it
