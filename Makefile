@@ -20,3 +20,8 @@ fmt:
 
 debug: build
 	./twitter2rss -config twitter2rss.hcl -debug
+
+vet:
+	go tool vet .
+
+test: vet

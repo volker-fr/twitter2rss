@@ -38,7 +38,7 @@ func getRss() string {
 	feed := &feeds.Feed{
 		Title:       "Twitter Home Timeline",
 		Description: "Twitter Home Timeline RSS Feed",
-		Author:      &feeds.Author{"Twitter2RSS", "lists.volker@gmail.com"},
+		Author:      &feeds.Author{Name: "Twitter2RSS", Email: "lists.volker@gmail.com"},
 		Link:        &feeds.Link{Href: "http://github.com:volker-fr/twitter2rss/"},
 		Created:     now,
 	}
@@ -84,7 +84,7 @@ func getRss() string {
 			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:titleLimit]),
 			Link:        &feeds.Link{Href: parser.GetTweetUrl(tweet)},
 			Description: parsedTweetText,
-			Author:      &feeds.Author{tweet.User.Name, tweet.User.ScreenName},
+			Author:      &feeds.Author{Name: tweet.User.Name, Email: tweet.User.ScreenName},
 			Created:     parser.ConvertTwitterTime(tweet.CreatedAt),
 			Id:          tweet.IDStr,
 		}
