@@ -12,21 +12,21 @@ import (
 //		 difficult to parse since the hight & width value can occure multiple
 //		 times if you look at the youtube html code
 type Content struct {
-	URL				   string
-	HTMLTitle          string
-	TwitterTitle       string
-	OGTitle            string
-	HDLTitle           string
-	Description        string
-	OGDescription      string
-	LPDescription      string
-	TwitterDescription string
-	TwitterPlayer	string
-	TwitterPlayerWidth string
+	URL                 string
+	HTMLTitle           string
+	TwitterTitle        string
+	OGTitle             string
+	HDLTitle            string
+	Description         string
+	OGDescription       string
+	LPDescription       string
+	TwitterDescription  string
+	TwitterPlayer       string
+	TwitterPlayerWidth  string
 	TwitterPlayerHeight string
-	OGVideoURL string
-	OGVideoWidth string
-	OGVideoHeight string
+	OGVideoURL          string
+	OGVideoWidth        string
+	OGVideoHeight       string
 }
 
 func getUrlContent(urls []string) string {
@@ -52,11 +52,12 @@ func getUrlContent(urls []string) string {
 			if tt == html.ErrorToken {
 				break
 			}
+
 			if tt == html.StartTagToken || tt == html.SelfClosingTagToken || tt == html.EndTagToken {
 				tagName, hasAttr := z.TagName()
 
 				// parse title tag
-				if strings.ToLower(string(tagName)) == "title" {
+				if tt == html.StartTagToken && strings.ToLower(string(tagName)) == "title" {
 					// if its a title tag the next entry will be the text
 					// TODO: check if this works with <title>a<b>c</b>d</title>
 					z.Next()
@@ -83,7 +84,6 @@ func getUrlContent(urls []string) string {
 	} // for _, url
 	return returnText
 }
-
 
 func getMetaInformation(content Content, keys map[string]string) Content {
 	// Assign now all the various values we will find in keys to the content object
@@ -144,7 +144,6 @@ func getMetaInformation(content Content, keys map[string]string) Content {
 	return content
 }
 
-
 func buildHTMLblock(content Content) string {
 	var title, description, mediaText string
 	var media, mediaWidth, mediaHeight string
@@ -191,11 +190,17 @@ func buildHTMLblock(content Content) string {
 		mediaHeight = content.OGVideoHeight
 	}
 
-	if len(media) > 0 && len(mediaWidth) >0 && len(mediaHeight) > 0 {
+	if len(media) > 0 && len(mediaWidth) > 0 && len(mediaHeight) > 0 {
 		mediaText = "\n<iframe width=" + mediaWidth + " height=" + mediaHeight + " src=" + media + " frameborder=0 allowfullscreen></iframe>"
 	}
-	title = "<b>" + title + "</b><br>\n"
-	footer := "<p><a href=\"" + content.URL + "\">" + content.URL + "</a>\n"
+
+	if len(title) > 0 {
+		title = "<b>" + title + "</b><br>\n"
+	}
+	if len(description) > 0 {
+		description = description + "<p>\n"
+	}
+	footer := "<a href=\"" + content.URL + "\">" + content.URL + "</a>\n"
 
 	return "<blockquote>\n" + title + description + footer + mediaText + "</blockquote>\n"
 }

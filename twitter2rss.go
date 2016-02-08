@@ -44,17 +44,19 @@ func getRss() string {
 	}
 	feed.Items = []*feeds.Item{}
 
-	/* // debugging & testing
-		//var tweetId int64 = 1234
-	    tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
+	// debugging & testing
+	if conf.Debug {
+		var tweetId int64 = 7654321
+		tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
 		if err != nil {
 			processAPIError("Couldn't load client.Statuses.Show: ", err)
 			return ""
 		}
-		fmt.Println("https://twitter.com/" + tweet.User.ScreenName + "/status/" + tweet.IDStr)
+		fmt.Println(parser.GetTweetUrl(*tweet))
 		spew.Dump(tweet)
 		println(parser.ParseTweetText(*tweet))
-		return "" */
+		return ""
+	}
 
 	// Get timeline
 	homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
@@ -69,10 +71,6 @@ func getRss() string {
 
 		if filter.IsTweetFiltered(tweet, conf, parsedTweetText) {
 			continue
-		}
-
-		if conf.Debug {
-			fmt.Printf("----\n%s\n", parsedTweetText)
 		}
 
 		titleLimit := 40

@@ -1,7 +1,6 @@
 package parser
 
-import (
-)
+import ()
 
 type replaceObject struct {
 	from        int

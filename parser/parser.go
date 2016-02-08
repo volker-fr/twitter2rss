@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 	"sort"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
@@ -41,6 +41,9 @@ func ParseTweetText(tweet twitter.Tweet) string {
 		// In case a tweet is shared with a comment there is a twitter URL in it
 		// which we don't want to have since we will get the shared tweet later
 		if tweet.QuotedStatus != nil {
+			// This if does not one specific cases when a user RT (id1) a
+			// shared post (id2) that shares the final post (id3). This
+			// checks id1 == id2 and not id1 == id3
 			if strings.EqualFold(url.ExpandedURL, GetTweetUrl(*tweet.QuotedStatus)) {
 				// replace with nothing
 				replacement = ""

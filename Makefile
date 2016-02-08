@@ -17,6 +17,7 @@ fmt:
 	go fmt *.go
 	go fmt config/*.go
 	go fmt filter/*.go
+	go fmt parser/*.go
 
 debug: build
 	./twitter2rss -config twitter2rss.hcl -debug
