@@ -26,3 +26,4 @@ vet:
 	go tool vet .
 
 test: vet
+	go test -cover

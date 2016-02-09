@@ -34,24 +34,26 @@ func ParseTweetText(tweet twitter.Tweet) string {
 
 	// Go through each URL object and replace it with a link and correct text
 	urls := []string{}
-	for _, url := range tweet.Entities.Urls {
-		replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
-		from := url.Indices[0]
-		to := url.Indices[1]
-		// In case a tweet is shared with a comment there is a twitter URL in it
-		// which we don't want to have since we will get the shared tweet later
-		if tweet.QuotedStatus != nil {
-			// This if does not one specific cases when a user RT (id1) a
-			// shared post (id2) that shares the final post (id3). This
-			// checks id1 == id2 and not id1 == id3
-			if strings.EqualFold(url.ExpandedURL, GetTweetUrl(*tweet.QuotedStatus)) {
-				// replace with nothing
-				replacement = ""
+	if tweet.Entities != nil && tweet.Entities.Urls != nil {
+		for _, url := range tweet.Entities.Urls {
+			replacement := "<a href='" + url.ExpandedURL + "'>" + url.DisplayURL + "</a>"
+			from := url.Indices[0]
+			to := url.Indices[1]
+			// In case a tweet is shared with a comment there is a twitter URL in it
+			// which we don't want to have since we will get the shared tweet later
+			if tweet.QuotedStatus != nil {
+				// This if does not one specific cases when a user RT (id1) a
+				// shared post (id2) that shares the final post (id3). This
+				// checks id1 == id2 and not id1 == id3
+				if strings.EqualFold(url.ExpandedURL, GetTweetUrl(*tweet.QuotedStatus)) {
+					// replace with nothing
+					replacement = ""
+				}
 			}
-		}
-		replacements = append(replacements, replaceObject{from, to, replacement})
-		if len(replacement) > 0 {
-			urls = append(urls, url.ExpandedURL)
+			replacements = append(replacements, replaceObject{from, to, replacement})
+			if len(replacement) > 0 {
+				urls = append(urls, url.ExpandedURL)
+			}
 		}
 	}
 
