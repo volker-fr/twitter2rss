@@ -1,3 +1,5 @@
+FOLDERS = config filter parser
+
 build: clean
 	go build
 
@@ -14,16 +16,21 @@ freebsd: clean
 	GOOS=freebsd GOARCH=amd64 go build
 
 fmt:
-	go fmt *.go
-	go fmt config/*.go
-	go fmt filter/*.go
-	go fmt parser/*.go
+	@go fmt *.go
+	@for dir in $(FOLDERS); do \
+		cd $$dir && go fmt *.go; \
+		cd ..; \
+	done
 
 debug: build
 	./twitter2rss -config twitter2rss.hcl -debug
 
 vet:
-	go tool vet .
+	@go tool vet .
 
 test: vet
-	go test -cover
+	@go test -cover -v
+	@for dir in $(FOLDERS); do \
+		cd $$dir && echo && echo Running test in $$dir && go test -cover; \
+		cd ..; \
+	done
