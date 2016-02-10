@@ -1,5 +1,3 @@
-# TODO: configuration for twitter keys & secrets
-
 # Filter based on the source of a tweet. Most helpful for services such as
 # Foursquare
 ignoreSource = [
@@ -12,3 +10,12 @@ ignoreText = [
     "I just backed.*kickstarter.com",
     "I just backed.*kck.st"
 ]
+
+# Authentication data from twitter
+consumerKey = "myConsumerKey"
+consumerSecret = "myConsumerSecret"
+accessToken = "myAccessToken"
+accessSecret = "myAccessSecret"
+
+# Should the program output debug information
+debug = true
