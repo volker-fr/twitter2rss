@@ -18,4 +18,9 @@ accessToken = "myAccessToken"
 accessSecret = "myAccessSecret"
 
 # Should the program output debug information
-debug = true
+#   default: false
+#debug = true
+
+# Maxium tweets to get from the home timeline
+#   default: 50
+#maxTweets = 100

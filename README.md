@@ -31,6 +31,8 @@ Usage of user-auth:
         Twitter Consumer Secret
   -debug
         Debug
+  -max-tweets int
+        Maximum tweets per feed
 ```
 
 ## Configuration

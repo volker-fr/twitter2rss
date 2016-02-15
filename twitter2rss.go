@@ -33,12 +33,12 @@ func getRss() string {
 	// debugging & testing
 	if conf.Debug {
 		var tweetId int64 = 7654321
-		tweetId = 697870867313766400
 		tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
 		if err != nil {
 			processAPIError("Couldn't load client.Statuses.Show: ", err)
 			return ""
 		}
+		return ""
 		fmt.Println(parser.GetTweetUrl(*tweet))
 		spew.Dump(tweet)
 		fmt.Println(parser.ParseTweetText(*tweet))
@@ -46,9 +46,7 @@ func getRss() string {
 	}
 
 	// Get timeline
-	// TODO: move count into config
-	count := 50
-	homeTimelineParams := &twitter.HomeTimelineParams{Count: count}
+	homeTimelineParams := &twitter.HomeTimelineParams{Count: conf.MaxTweets}
 	tweets, _, err := client.Timelines.HomeTimeline(homeTimelineParams)
 	if err != nil {
 		processAPIError("Couldn't load HomeTimeline: ", err)

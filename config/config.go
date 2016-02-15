@@ -19,7 +19,10 @@ type Config struct {
 	AccessToken    string
 	AccessSecret   string
 	Debug          bool
+	MaxTweets      int
 }
+
+const maxTweetsDefault = 50
 
 func LoadConfig() Config {
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
@@ -27,6 +30,8 @@ func LoadConfig() Config {
 	consumerSecret := flags.String("consumer-secret", "", "Twitter Consumer Secret")
 	accessToken := flags.String("access-token", "", "Twitter Access Token")
 	accessSecret := flags.String("access-secret", "", "Twitter Access Secret")
+	// default value 0 is important to identify later where the config came from
+	maxTweets := flags.Int("max-tweets", 0, "Maximum tweets per feed")
 	debug := flags.Bool("debug", false, "Debug")
 	configFile := flags.String("config", "", "Configiguration file")
 
@@ -52,6 +57,14 @@ func LoadConfig() Config {
 		conf.AccessSecret = *accessSecret
 	}
 	conf.Debug = *debug
+	// provided via command line
+	if *maxTweets != 0 {
+		conf.MaxTweets = *maxTweets
+	}
+	// not provided via config & command line
+	if conf.MaxTweets == 0 {
+		conf.MaxTweets = maxTweetsDefault
+	}
 
 	if conf.ConsumerKey == "" || conf.ConsumerSecret == "" || conf.AccessToken == "" || conf.AccessSecret == "" {
 		log.Fatal("Consumer key/secret and Access token/secret required")
