@@ -73,5 +73,8 @@ Having a lot of tweets and reading them individual can be tiring. As result twee
 
 To avoid duplicate feeds items feeds are sorted into hour blocks each days. The default is 6 hour blocks (12am-6am, 6am-12pm, 12pm-6pm, 6pm-12am). The most recent hour block will not be created as feed item. As result, if the feed is checked at 3pm, only tweets created before 12pm will be shown. The tweets that are not shown 3pm are shown after 6pm.
 
+## LICENSE
+[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
 ## Thanks
 Thanks to Jon Bodner for helping with go related questions.
