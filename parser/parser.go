@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
 )
 
@@ -65,11 +64,7 @@ func ParseTweetText(tweet twitter.Tweet) string {
 		var mediaReplacement string
 		for _, media := range tweet.ExtendedEntities.Media {
 			var mediaUrl string
-			if media.Type != "photo" {
-				fmt.Println("media.Type not photo")
-				spew.Dump(tweet)
-				mediaReplacement += "unsupported_mediatype"
-			} else if media.Type == "photo" {
+			if media.Type == "photo" || media.Type == "animated_gif" {
 				// or maybe we should use media.URLEntity.ExpandedURL?
 				if len(media.MediaURLHttps) != 0 {
 					mediaUrl = media.MediaURLHttps
@@ -77,6 +72,9 @@ func ParseTweetText(tweet twitter.Tweet) string {
 					mediaUrl = media.MediaURL
 				}
 				mediaReplacement += "<br><img src='" + mediaUrl + "'><br>"
+			} else {
+				fmt.Printf("WARNING: media.Type %q is unknown\n", media.Type)
+				mediaReplacement += "unsupported_mediatype"
 			}
 			mediaFrom = media.Indices[0]
 			mediaTo = media.Indices[1]

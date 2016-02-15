@@ -33,6 +33,7 @@ func getRss() string {
 	// debugging & testing
 	if conf.Debug {
 		var tweetId int64 = 7654321
+		tweetId = 697870867313766400
 		tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
 		if err != nil {
 			processAPIError("Couldn't load client.Statuses.Show: ", err)
@@ -40,7 +41,7 @@ func getRss() string {
 		}
 		fmt.Println(parser.GetTweetUrl(*tweet))
 		spew.Dump(tweet)
-		println(parser.ParseTweetText(*tweet))
+		fmt.Println(parser.ParseTweetText(*tweet))
 		return ""
 	}
 
