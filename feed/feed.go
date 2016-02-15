@@ -2,8 +2,8 @@ package feed
 
 import (
 	"fmt"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
 	"github.com/volker-fr/twitter2rss/filter"
@@ -40,8 +40,8 @@ func CreateIndividualFeed(conf config.Config, tweets []twitter.Tweet) *feeds.Fee
 			continue
 		}
 
-		titleLimit := 40
-		if len(tweet.Text) < 40 {
+		titleLimit := 60
+		if len(tweet.Text) < 60 {
 			titleLimit = len(tweet.Text)
 		}
 		item := &feeds.Item{
@@ -68,13 +68,13 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 
 	sortedTweets := sortTweetsIntoHourSegments(tweets, segmentSize)
 
-	for timeSegment, timeSortedTweets := range sortedTweets {
+	for tweetTimeSegment, timeSortedTweets := range sortedTweets {
 		// get YYYY-MM-DD + Hour / <segmentsize>
 		hourBlock := strconv.Itoa(time.Now().Hour() / segmentSize)
-		currentSegment := time.Now().Format("2006-01-02") + "-" + hourBlock
+		currentTimeSegment := time.Now().Format("2006-01-02") + "-" + hourBlock
 
-		if timeSegment == currentSegment {
-			fmt.Printf("Skipping tweets from the last segment...")
+		if tweetTimeSegment == currentTimeSegment {
+			fmt.Printf("Skipping tweets from the most recent time segment. This will avoid duplicates or incomplete rss entries.\n")
 			continue
 		}
 
@@ -92,16 +92,16 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 
 			// the last value is unrelated and not a real time but the internal
 			// time segment, only 2006-01-02 matters
-			rssDate, _ := time.Parse("2006-01-02-03", currentSegment)
+			rssDate, _ := time.Parse("2006-01-02-03", tweetTimeSegment)
 
 			item := &feeds.Item{
 				// TODO: check if slicing a string with non ascii chars will fail/scramble the text
-				Title:       fmt.Sprintf("%s %s: %s...", currentSegment, twitterUser, "combined tweets"),
+				Title:       fmt.Sprintf("%s %s: %s...", tweetTimeSegment, twitterUser, "combined tweets"),
 				Link:        &feeds.Link{Href: "https://twitter.com/" + twitterUser + "/"},
 				Description: feedText,
 				Author:      &feeds.Author{Name: twitterUser, Email: twitterUser},
 				Created:     rssDate,
-				Id:          fmt.Sprintf("%s-%s", currentSegment, twitterUser),
+				Id:          fmt.Sprintf("%s-%s", currentTimeSegment, twitterUser),
 			}
 			feed.Add(item)
 		}

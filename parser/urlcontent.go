@@ -39,11 +39,11 @@ func getUrlContent(urls []string) string {
 
 		// open connection & get data
 		resp, err := http.Get(url)
-		defer resp.Body.Close()
 		if err != nil {
-			fmt.Printf("Couldn't load %s: %s", url, err)
+			fmt.Printf("Couldn't load %s: %s\n", url, err)
 			continue
 		}
+		defer resp.Body.Close()
 
 		z := html.NewTokenizer(resp.Body)
 		for {

@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/volker-fr/twitter2rss/config"
-	"github.com/volker-fr/twitter2rss/parser"
 	"github.com/volker-fr/twitter2rss/feed"
+	"github.com/volker-fr/twitter2rss/parser"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
