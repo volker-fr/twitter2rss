@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/feeds"
 	"github.com/volker-fr/twitter2rss/config"
 	"github.com/volker-fr/twitter2rss/feed"
 	"github.com/volker-fr/twitter2rss/parser"
@@ -38,7 +39,6 @@ func getRss() string {
 			processAPIError("Couldn't load client.Statuses.Show: ", err)
 			return ""
 		}
-		return ""
 		fmt.Println(parser.GetTweetUrl(*tweet))
 		spew.Dump(tweet)
 		fmt.Println(parser.ParseTweetText(*tweet))
@@ -53,12 +53,16 @@ func getRss() string {
 		return ""
 	}
 
-	// TODO: create config option for this as well as the amount of hour segments
-	//feed := feed.CreateIndividualFeed(conf, tweets)
-	feed := feed.CreateCombinedUserFeed(conf, tweets)
+	// get either single tweets or combine multiple tweets of the same author together
+	var rssFeed *feeds.Feed
+	if conf.CombinedFeed == false {
+		rssFeed = feed.CreateIndividualFeed(conf, tweets)
+	} else {
+		rssFeed = feed.CreateCombinedUserFeed(conf, tweets)
+	}
 
 	// Create feed
-	atom, err := feed.ToAtom()
+	atom, err := rssFeed.ToAtom()
 	if err != nil {
 		log.Fatal(err)
 	}

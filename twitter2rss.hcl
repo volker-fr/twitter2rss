@@ -12,10 +12,10 @@ ignoreText = [
 ]
 
 # Authentication data from twitter
-consumerKey = "myConsumerKey"
-consumerSecret = "myConsumerSecret"
-accessToken = "myAccessToken"
-accessSecret = "myAccessSecret"
+#consumerKey = "myConsumerKey"
+#consumerSecret = "myConsumerSecret"
+#accessToken = "myAccessToken"
+#accessSecret = "myAccessSecret"
 
 # Should the program output debug information
 #   default: false
@@ -24,3 +24,7 @@ accessSecret = "myAccessSecret"
 # Maxium tweets to get from the home timeline
 #   default: 50
 #maxTweets = 100
+
+# Combine feed entries of the same author into one rss entry?
+#   default: false
+#combinedFeed = true

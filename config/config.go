@@ -20,6 +20,7 @@ type Config struct {
 	AccessSecret   string
 	Debug          bool
 	MaxTweets      int
+	CombinedFeed   bool
 }
 
 const maxTweetsDefault = 50
@@ -30,6 +31,7 @@ func LoadConfig() Config {
 	consumerSecret := flags.String("consumer-secret", "", "Twitter Consumer Secret")
 	accessToken := flags.String("access-token", "", "Twitter Access Token")
 	accessSecret := flags.String("access-secret", "", "Twitter Access Secret")
+	combinedFeed := flags.Bool("combined-feed", false, "Combine multiple tweets from the same user into a single RSS entry?")
 	// default value 0 is important to identify later where the config came from
 	maxTweets := flags.Int("max-tweets", 0, "Maximum tweets per feed")
 	debug := flags.Bool("debug", false, "Debug")
@@ -56,7 +58,14 @@ func LoadConfig() Config {
 	if *accessSecret != "" {
 		conf.AccessSecret = *accessSecret
 	}
-	conf.Debug = *debug
+	// command line argument set
+	if *debug == true {
+		conf.Debug = *debug
+	}
+	// command line argument set
+	if *combinedFeed == true {
+		conf.CombinedFeed = *combinedFeed
+	}
 	// provided via command line
 	if *maxTweets != 0 {
 		conf.MaxTweets = *maxTweets
