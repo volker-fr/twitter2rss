@@ -1,4 +1,4 @@
-FOLDERS = config filter parser
+FOLDERS = config filter parser feed
 
 build: clean
 	go build

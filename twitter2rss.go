@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/volker-fr/twitter2rss/config"
-	"github.com/volker-fr/twitter2rss/filter"
 	"github.com/volker-fr/twitter2rss/parser"
+	"github.com/volker-fr/twitter2rss/feed"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
-	"github.com/gorilla/feeds"
 )
 
 var conf config.Config = config.LoadConfig()
@@ -32,18 +30,6 @@ func getRss() string {
 	// Twitter Client
 	client := twitter.NewClient(httpClient)
 
-	now := time.Now()
-
-	// rss feed
-	feed := &feeds.Feed{
-		Title:       "Twitter Home Timeline",
-		Description: "Twitter Home Timeline RSS Feed",
-		Author:      &feeds.Author{Name: "Twitter2RSS", Email: "lists.volker@gmail.com"},
-		Link:        &feeds.Link{Href: "http://github.com:volker-fr/twitter2rss/"},
-		Created:     now,
-	}
-	feed.Items = []*feeds.Item{}
-
 	// debugging & testing
 	if conf.Debug {
 		var tweetId int64 = 7654321
@@ -59,35 +45,18 @@ func getRss() string {
 	}
 
 	// Get timeline
-	homeTimelineParams := &twitter.HomeTimelineParams{Count: 50}
+	// TODO: move count into config
+	count := 50
+	homeTimelineParams := &twitter.HomeTimelineParams{Count: count}
 	tweets, _, err := client.Timelines.HomeTimeline(homeTimelineParams)
 	if err != nil {
 		processAPIError("Couldn't load HomeTimeline: ", err)
 		return ""
 	}
 
-	for _, tweet := range tweets {
-		parsedTweetText := parser.ParseTweetText(tweet)
-
-		if filter.IsTweetFiltered(tweet, conf, parsedTweetText) {
-			continue
-		}
-
-		titleLimit := 40
-		if len(tweet.Text) < 40 {
-			titleLimit = len(tweet.Text)
-		}
-		item := &feeds.Item{
-			// TODO: check if slicing a string with non ascii chars will fail/scramble the text
-			Title:       fmt.Sprintf("%s: %s...", tweet.User.Name, tweet.Text[:titleLimit]),
-			Link:        &feeds.Link{Href: parser.GetTweetUrl(tweet)},
-			Description: parsedTweetText,
-			Author:      &feeds.Author{Name: tweet.User.Name, Email: tweet.User.ScreenName},
-			Created:     parser.ConvertTwitterTime(tweet.CreatedAt),
-			Id:          tweet.IDStr,
-		}
-		feed.Add(item)
-	}
+	// TODO: create config option for this as well as the amount of hour segments
+	//feed := feed.CreateIndividualFeed(conf, tweets)
+	feed := feed.CreateCombinedUserFeed(conf, tweets)
 
 	// Create feed
 	atom, err := feed.ToAtom()
