@@ -63,18 +63,16 @@ func CreateIndividualFeed(conf config.Config, tweets []twitter.Tweet) *feeds.Fee
 func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.Feed {
 	feed := createFeedHeader()
 
-	// TODO: move
-	segmentSize := 6
-
-	sortedTweets := sortTweetsIntoHourSegments(tweets, segmentSize)
+	sortedTweets := sortTweetsIntoHourSegments(tweets, conf.CombinedFeedHours)
 
 	for tweetTimeSegment, timeSortedTweets := range sortedTweets {
 		// get YYYY-MM-DD + Hour / <segmentsize>
-		hourBlock := strconv.Itoa(time.Now().Hour() / segmentSize)
+		hourBlock := strconv.Itoa(time.Now().Hour() / conf.CombinedFeedHours)
 		currentTimeSegment := time.Now().Format("2006-01-02") + "-" + hourBlock
 
 		if tweetTimeSegment == currentTimeSegment {
-			fmt.Printf("Skipping tweets from the most recent time segment. This will avoid duplicates or incomplete rss entries.\n")
+			fmt.Println("INFO: Skipping tweets from the most recent time segment.")
+			fmt.Println("      This will avoid duplicates or incomplete rss entries.")
 			continue
 		}
 
@@ -90,13 +88,22 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 				feedText += parsedTweetText + "\n<hr><hr>\n"
 			}
 
-			// the last value is unrelated and not a real time but the internal
-			// time segment, only 2006-01-02 matters
-			rssDate, _ := time.Parse("2006-01-02-03", tweetTimeSegment)
+			// Calculate the time so we have a nicer formating
+			segment, err := strconv.Atoi(tweetTimeSegment[11:])
+			if err != nil {
+				fmt.Printf("WARNING: couldn't converte %q to integer\n", tweetTimeSegment[11:])
+			}
+			segmentTime := strconv.Itoa(conf.CombinedFeedHours * segment)
+
+			rssDate, err := time.Parse("2006-01-02-15", tweetTimeSegment[0:10]+"-"+segmentTime)
+			if err != nil {
+				fmt.Printf("WARNING: couldn't parse time %q \n", tweetTimeSegment[0:10]+"-"+segmentTime)
+			}
+			humanTweetSummaryTime := rssDate.Format("03pm")
 
 			item := &feeds.Item{
 				// TODO: check if slicing a string with non ascii chars will fail/scramble the text
-				Title:       fmt.Sprintf("%s %s: %s...", tweetTimeSegment, twitterUser, "combined tweets"),
+				Title:       fmt.Sprintf("%s %s %s...", twitterUser, humanTweetSummaryTime, "combined tweets update"),
 				Link:        &feeds.Link{Href: "https://twitter.com/" + twitterUser + "/"},
 				Description: feedText,
 				Author:      &feeds.Author{Name: twitterUser, Email: twitterUser},

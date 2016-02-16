@@ -12,18 +12,20 @@ import (
 )
 
 type Config struct {
-	IgnoreText     []string
-	IgnoreSource   []string
-	ConsumerKey    string
-	ConsumerSecret string
-	AccessToken    string
-	AccessSecret   string
-	Debug          bool
-	MaxTweets      int
-	CombinedFeed   bool
+	IgnoreText        []string
+	IgnoreSource      []string
+	ConsumerKey       string
+	ConsumerSecret    string
+	AccessToken       string
+	AccessSecret      string
+	Debug             bool
+	MaxTweets         int
+	CombinedFeed      bool
+	CombinedFeedHours int
 }
 
 const maxTweetsDefault = 50
+const combinedFeedHoursDefault = 6
 
 func LoadConfig() Config {
 	flags := flag.NewFlagSet("user-auth", flag.ExitOnError)
@@ -34,6 +36,7 @@ func LoadConfig() Config {
 	combinedFeed := flags.Bool("combined-feed", false, "Combine multiple tweets from the same user into a single RSS entry?")
 	// default value 0 is important to identify later where the config came from
 	maxTweets := flags.Int("max-tweets", 0, "Maximum tweets per feed")
+	combinedFeedHours := flags.Int("combined-feed-hours", 0, "if combined-tweet, how many hours should be combined together?")
 	debug := flags.Bool("debug", false, "Debug")
 	configFile := flags.String("config", "", "Configiguration file")
 
@@ -73,6 +76,19 @@ func LoadConfig() Config {
 	// not provided via config & command line
 	if conf.MaxTweets == 0 {
 		conf.MaxTweets = maxTweetsDefault
+	}
+	// provided via command line
+	if *combinedFeedHours != 0 {
+		conf.CombinedFeedHours = *combinedFeedHours
+	}
+	// not provided via config & command line
+	if conf.CombinedFeedHours == 0 {
+		conf.CombinedFeedHours = combinedFeedHoursDefault
+	}
+
+	if conf.CombinedFeedHours > 24 {
+		fmt.Println("WARNING: please check your configuration. Combining feed by more as 24hours")
+		fmt.Println("         doesn't make a difference and the result will be equal to 24")
 	}
 
 	if conf.ConsumerKey == "" || conf.ConsumerSecret == "" || conf.AccessToken == "" || conf.AccessSecret == "" {

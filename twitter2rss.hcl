@@ -27,4 +27,10 @@ ignoreText = [
 
 # Combine feed entries of the same author into one rss entry?
 #   default: false
-#combinedFeed = true
+combinedFeed = true
+
+# If tweets are combined, define the amount of hours you want to use
+# E.g. 6 means every 6 hours there is a new feed entry
+# This only works in combination with combedFeed. Else it is ignored
+#   default: 6
+#combinedFeedHours = 12

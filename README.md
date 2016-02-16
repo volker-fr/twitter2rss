@@ -25,6 +25,8 @@ Usage of user-auth:
         Twitter Access Token
   -combined-feed
         Combine multiple tweets from the same user into a single RSS entry?
+  -combined-feed-hours int
+        if combined-tweet, how many hours should be combined together?
   -config string
         Configiguration file
   -consumer-key string
@@ -72,6 +74,8 @@ Note: The tweet text used is not the raw tweet text provided by the Twitter API 
 Having a lot of tweets and reading them individual can be tiring. As result tweets of the same author can be combined into one tweet with the _-combined-feed_ command line option or by using the configuration file.
 
 To avoid duplicate feeds items feeds are sorted into hour blocks each days. The default is 6 hour blocks (12am-6am, 6am-12pm, 12pm-6pm, 6pm-12am). The most recent hour block will not be created as feed item. As result, if the feed is checked at 3pm, only tweets created before 12pm will be shown. The tweets that are not shown 3pm are shown after 6pm.
+
+You can also define the amount of hours that should be combined together with _-combined-feed-hours_. Not every value makes sense. Every value over 24 doesn't change the output. 23 would lead to two combined feed entries: 12am-11pm, 11pm-12am. 12 or 24 would be highest reasonable numbers.
 
 ## LICENSE
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
