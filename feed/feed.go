@@ -21,7 +21,7 @@ func createFeedHeader() *feeds.Feed {
 		Title:       "Twitter Home Timeline",
 		Description: "Twitter Home Timeline RSS Feed",
 		Author:      &feeds.Author{Name: "Twitter2RSS", Email: "lists.volker@gmail.com"},
-		Link:        &feeds.Link{Href: "http://github.com:volker-fr/twitter2rss/"},
+		Link:        &feeds.Link{Href: "http://github.com/volker-fr/twitter2rss/"},
 		Created:     now,
 	}
 	feed.Items = []*feeds.Item{}

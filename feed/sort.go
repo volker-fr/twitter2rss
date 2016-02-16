@@ -7,19 +7,6 @@ import (
 	"github.com/volker-fr/twitter2rss/parser"
 )
 
-// combine multiple tweets together into one feed item
-func sortTweetsByAuthor(tweets []twitter.Tweet) map[string][]twitter.Tweet {
-	var sortedList map[string][]twitter.Tweet
-	sortedList = make(map[string][]twitter.Tweet)
-	for _, tweet := range tweets {
-		author := tweet.User.ScreenName
-
-		sortedList[author] = append(sortedList[author], tweet)
-	}
-
-	return sortedList
-}
-
 // sort tweet into hour segments & author
 // Example:
 // 		segment of  6 = 4x  6hour blocks a day
