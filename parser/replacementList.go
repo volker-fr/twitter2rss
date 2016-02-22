@@ -1,7 +1,5 @@
 package parser
 
-import ()
-
 type replaceObject struct {
 	from        int
 	to          int

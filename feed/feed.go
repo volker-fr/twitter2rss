@@ -79,7 +79,7 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 		for twitterUser, authorTweets := range timeSortedTweets {
 			var feedText string
 
-			for _, tweet := range authorTweets {
+			for _, tweet := range timeSort(authorTweets) {
 				parsedTweetText := parser.ParseTweetText(tweet)
 
 				if filter.IsTweetFiltered(tweet, conf, parsedTweetText) {

@@ -23,7 +23,7 @@ fmt:
 	done
 
 debug: build
-	./twitter2rss -config twitter2rss.hcl -debug
+	./twitter2rss -config twitter2rss.hcl -max-tweets 5 -debug
 
 vet:
 	@go tool vet .
