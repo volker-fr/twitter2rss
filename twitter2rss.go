@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/feeds"
 	"github.com/volker-fr/twitter2rss/config"
 	"github.com/volker-fr/twitter2rss/feed"
-	"github.com/volker-fr/twitter2rss/parser"
 	"github.com/volker-fr/twitter2rss/version"
 
 	"github.com/davecgh/go-spew/spew"
@@ -33,7 +32,7 @@ func getRss() string {
 	client := twitter.NewClient(httpClient)
 
 	// debugging & testing
-	if conf.Debug {
+	/*if conf.Debug {
 		var tweetId int64 = 7654321
 		tweet, _, err := client.Statuses.Show(tweetId, &twitter.StatusShowParams{})
 		if err != nil {
@@ -44,7 +43,7 @@ func getRss() string {
 		spew.Dump(tweet)
 		fmt.Println(parser.ParseTweetText(*tweet))
 		return ""
-	}
+	}*/
 
 	// Get timeline
 	homeTimelineParams := &twitter.HomeTimelineParams{Count: conf.MaxTweets}
@@ -77,9 +76,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("twitter2rss version", version.GetVersion())
-	if conf.Debug {
-		_ = getRss()
-	}
+	//if conf.Debug {
+	//	_ = getRss()
+	//}
 
 	// TODO: add logging
 	// TODO: add error handling in case the port is already in use

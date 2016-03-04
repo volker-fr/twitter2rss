@@ -21,6 +21,7 @@ func ConvertTwitterTime(timestring string) time.Time {
 // Parse the text, identify twitter shortened URLs and replace them
 func ParseTweetText(tweet twitter.Tweet) string {
 	text := tweet.Text
+	divBox := "<div style=\"border:1px solid black\">\n"
 	var replacements ReplacementList
 
 	// Special case, if it's retweeted then the URL placement might not be correct
@@ -28,7 +29,7 @@ func ParseTweetText(tweet twitter.Tweet) string {
 	// The Twitter timeline also doesn't show the RT message but the retweeted Tweet.
 	if tweet.RetweetedStatus != nil {
 		text = ParseTweetText(*tweet.RetweetedStatus)
-		return text + "<br>\nvia RT from <a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a>"
+		return "<blockquote>\n" + divBox + text + "<br>\nvia RT from <a href=\"" + GetTweetUrl(tweet) + "\">" + tweet.User.Name + "</a>\n" + "</div>\n" + "</blockquote>\n"
 	}
 
 	// Go through each URL object and replace it with a link and correct text
@@ -56,7 +57,7 @@ func ParseTweetText(tweet twitter.Tweet) string {
 		}
 	}
 
-	// Go through each Media object and replace it the link in the text with it
+	// Go through each Media object and replace the link in the text with it
 	if tweet.ExtendedEntities != nil && tweet.ExtendedEntities.Media != nil {
 		var mediaFrom, mediaTo int
 		// Media objects always have the same indices for replacement for multiple objects
@@ -100,8 +101,8 @@ func ParseTweetText(tweet twitter.Tweet) string {
 	// process all urls we found so we can append it to the entry
 	var urlText string
 	if len(urls) > 0 {
-		urlText = "<hr>\n" + getUrlContent(urls) + "\n"
+		urlText = "<blockquote>\n" + divBox + getUrlContent(urls) + "</div>\n" + "</blockquote>\n"
 	}
 
-	return text + footer + urlText
+	return divBox + text + footer + urlText + "</div>"
 }

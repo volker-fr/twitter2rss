@@ -202,5 +202,5 @@ func buildHTMLblock(content Content) string {
 	}
 	footer := "<a href=\"" + content.URL + "\">" + content.URL + "</a>\n"
 
-	return "<blockquote>\n" + title + description + footer + mediaText + "</blockquote>\n"
+	return title + description + footer + mediaText
 }

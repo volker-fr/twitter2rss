@@ -85,7 +85,7 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 				if filter.IsTweetFiltered(tweet, conf, parsedTweetText) {
 					continue
 				}
-				feedText += parsedTweetText + "\n<hr><hr>\n"
+				feedText += parsedTweetText + "\n<hr>\n"
 			}
 
 			// Calculate the time so we have a nicer formating
