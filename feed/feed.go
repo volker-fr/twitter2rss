@@ -101,6 +101,10 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 			}
 			humanTweetSummaryTime := rssDate.Format("03pm")
 
+			if conf.Debug {
+				feedText = rssDate.Format("1 2 3 4 -- 03pm") + "<br>\nId: " + tweetTimeSegment + "-" + twitterUser + "<p>\n\n" + feedText
+			}
+
 			item := &feeds.Item{
 				// TODO: check if slicing a string with non ascii chars will fail/scramble the text
 				Title:       fmt.Sprintf("%s %s %s...", twitterUser, humanTweetSummaryTime, "combined tweets update"),
@@ -108,7 +112,7 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 				Description: feedText,
 				Author:      &feeds.Author{Name: twitterUser, Email: twitterUser},
 				Created:     rssDate,
-				Id:          fmt.Sprintf("%s-%s", currentTimeSegment, twitterUser),
+				Id:          fmt.Sprintf("%s-%s", tweetTimeSegment, twitterUser),
 			}
 			feed.Add(item)
 		}
