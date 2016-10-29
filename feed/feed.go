@@ -2,6 +2,7 @@ package feed
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -88,6 +89,12 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 				feedText += parsedTweetText + "\n<hr>\n"
 			}
 
+			// 0 if all tweets are filtered
+			if len(feedText) == 0 {
+				log.Printf("DEBUG: skipping %v-%v since all tweets are filtered\n", tweetTimeSegment, twitterUser)
+				continue
+			}
+
 			// Calculate the time so we have a nicer formating
 			segment, err := strconv.Atoi(tweetTimeSegment[11:])
 			if err != nil {
@@ -102,7 +109,7 @@ func CreateCombinedUserFeed(conf config.Config, tweets []twitter.Tweet) *feeds.F
 			humanTweetSummaryTime := rssDate.Format("03pm")
 
 			if conf.Debug {
-				feedText = rssDate.Format("1 2 3 4 -- 03pm") + "<br>\nId: " + tweetTimeSegment + "-" + twitterUser + "<p>\n\n" + feedText
+				feedText = rssDate.Format("1 2 3 4 -- 03pm") + "<br>\nId: " + tweetTimeSegment + "-" + twitterUser + "<br>\nLen feedtext: " + strconv.Itoa(len(feedText)) + "<p>\n\n" + feedText
 			}
 
 			item := &feeds.Item{
